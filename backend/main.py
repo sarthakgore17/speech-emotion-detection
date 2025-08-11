@@ -20,13 +20,12 @@ def extract_feature(data, sr, mfcc, chroma, mel):
     """
     Extract features from audio files into numpy array
     """
-    if chroma:                          
-        stft = np.abs(librosa.stft(data))  
     result = np.array([])
     if mfcc:                          
         mfccs = np.mean(librosa.feature.mfcc(y=data, sr=sr, n_mfcc=40).T, axis=0)
         result = np.hstack((result, mfccs))
-    if chroma:                          
+    if chroma:
+        stft = np.abs(librosa.stft(data))
         chroma_feat = np.mean(librosa.feature.chroma_stft(S=stft, sr=sr).T, axis=0)
         result = np.hstack((result, chroma_feat))
     if mel:                             
@@ -59,7 +58,8 @@ def predict_emotion():
     if 'audio' not in request.files:
         return jsonify({'error': 'No audio file provided'}), 400
     file = request.files['audio']
-    file_path = os.path.join(UPLOAD_FOLDER, file.filename)
+    filename = file.filename if file.filename else "uploaded_audio.wav"
+    file_path = os.path.join(UPLOAD_FOLDER, filename)
     file.save(file_path)
     
     try:
