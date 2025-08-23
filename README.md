@@ -13,40 +13,40 @@
 
 ## Table of Contents
 
-- [🎯 Overview](#-overview)
-- [✨ Features](#-features)
-- [🔧 Technologies Used](#-technologies-used)
-- [🏗️ System Architecture](#️-system-architecture)
-- [📊 Model Performance](#-model-performance)
-- [🖼️ User Interface](#️-user-interface)
-- [⚙️ Installation](#️-installation)
-- [🚀 Usage](#-usage)
-- [📁 Project Structure](#-project-structure)
-- [🎯 Emotions Detected](#-emotions-detected)
-- [📈 Dataset](#-dataset)
-- [🧠 Model Architecture](#-model-architecture)
-- [🔄 API Endpoints](#-api-endpoints)
-- [🎨 Frontend Features](#-frontend-features)
-- [🔧 Development](#-development)
-- [🚨 Troubleshooting](#-troubleshooting)
-- [🤝 Contributing](#-contributing)
-- [📄 License](#-license)
+- [Overview](#-overview)
+- [Features](#-features)
+- [Technologies Used](#-technologies-used)
+- [System Architecture](#️-system-architecture)
+- [Model Performance](#-model-performance)
+- [User Interface](#️-user-interface)
+- [Installation](#️-installation)
+- [Usage](#-usage)
+- [Project Structure](#-project-structure)
+- [Emotions Detected](#-emotions-detected)
+- [Dataset](#-dataset)
+- [Model Architecture](#-model-architecture)
+- [API Endpoints](#-api-endpoints)
+- [Frontend Features](#-frontend-features)
+- [Development](#-development)
+- [Troubleshooting](#-troubleshooting)
+- [Contributing](#-contributing)
+- [License](#-license)
 
 ## Overview
 
 This Speech Emotion Detection System uses advanced machine learning techniques to analyze audio recordings and identify the emotional state of the speaker. The system employs a Convolutional Neural Network (CNN) trained on the RAVDESS dataset to classify emotions with high accuracy.
 
 ### Key Highlights:
-- 🎯 **8 Emotion Classes**: Neutral, Calm, Happy, Sad, Angry, Fearful, Disgust, Surprised
-- 🎤 **Real-time Recording**: Record audio directly through the web interface
-- 📁 **File Upload**: Support for various audio formats (WAV, MP3, FLAC)
-- 🌟 **Interactive UI**: Dynamic background colors based on detected emotions
-- 📱 **Responsive Design**: Beautiful, modern interface with Tailwind CSS
-- ⚡ **Real-time Processing**: Fast emotion prediction with immediate results
+-  **8 Emotion Classes**: Neutral, Calm, Happy, Sad, Angry, Fearful, Disgust, Surprised
+-  **Real-time Recording**: Record audio directly through the web interface
+-  **File Upload**: Support for various audio formats (WAV, MP3, FLAC)
+-  **Interactive UI**: Dynamic background colors based on detected emotions
+-  **Responsive Design**: Beautiful, modern interface with Tailwind CSS
+-  **Real-time Processing**: Fast emotion prediction with immediate results
 
 ## Features
 
-### 🎵 Audio Processing
+### Audio Processing
 - **Multiple Input Methods**: Upload audio files or record directly
 - **Format Support**: WAV, MP3, FLAC audio formats
 - **Feature Extraction**: MFCC, Chroma, Mel-spectrogram features
@@ -512,11 +512,11 @@ git checkout -b feature/amazing-feature
 
 ### Areas for Contribution
 
-- 🎯 **Model Improvements**: Better architectures, hyperparameter tuning
-- 🎨 **UI/UX Enhancements**: New themes, animations, accessibility
-- 📊 **Analytics**: Usage tracking, performance monitoring
-- 🌐 **Internationalization**: Multi-language support
-- 📱 **Mobile App**: React Native or Flutter implementation
+-  **Model Improvements**: Better architectures, hyperparameter tuning
+-  **UI/UX Enhancements**: New themes, animations, accessibility
+-  **Analytics**: Usage tracking, performance monitoring
+-  **Internationalization**: Multi-language support
+-  **Mobile App**: React Native or Flutter implementation
 
 ## 📄 License
 
