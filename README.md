@@ -65,25 +65,6 @@ This Speech Emotion Detection System uses advanced machine learning techniques t
 - **Responsive Layout**: Works on desktop and mobile devices
 - **Real-time Feedback**: Visual and audio feedback during recording
 
-## Technologies Used
-
-### Backend
-| Technology | Version | Purpose |
-|------------|---------|---------|
-| ![Python](https://img.shields.io/badge/Python-3.x-blue?logo=python) | 3.x | Core backend language |
-| ![TensorFlow](https://img.shields.io/badge/TensorFlow-2.16.2-orange?logo=tensorflow) | 2.16.2 | Deep learning framework |
-| ![Flask](https://img.shields.io/badge/Flask-3.1.0-green?logo=flask) | 3.1.0 | Web framework |
-| ![Librosa](https://img.shields.io/badge/Librosa-0.10.0-purple) | 0.10.0 | Audio processing |
-| ![Scikit-learn](https://img.shields.io/badge/Scikit--learn-1.5.2-orange) | 1.5.2 | Machine learning utilities |
-
-### Frontend
-| Technology | Version | Purpose |
-|------------|---------|---------|
-| ![React](https://img.shields.io/badge/React-18.3.1-blue?logo=react) | 18.3.1 | Frontend framework |
-| ![Vite](https://img.shields.io/badge/Vite-6.3.5-purple?logo=vite) | 6.3.5 | Build tool |
-| ![Tailwind CSS](https://img.shields.io/badge/Tailwind-3.4.15-blue?logo=tailwindcss) | 3.4.15 | Styling framework |
-| ![Axios](https://img.shields.io/badge/Axios-1.7.7-blue) | 1.7.7 | HTTP client |
-
 ## System Architecture
 
 ```mermaid
