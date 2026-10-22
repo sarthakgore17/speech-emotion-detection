@@ -71,6 +71,74 @@ const EMOTIONS_CONFIG = {
 const LEFT_EMOTIONS = ['Happy', 'Sad', 'Fearful', 'Surprised'];
 const RIGHT_EMOTIONS = ['Neutral', 'Angry', 'Disgust', 'Calm'];
 
+// Convert any browser audio Blob (WebM/Opus) into standard 16-bit PCM mono WAV at 22050Hz
+async function convertBlobToWav(blob, targetSr = 22050) {
+  try {
+    const arrayBuffer = await blob.arrayBuffer();
+    const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+    if (!AudioContextClass) return blob;
+
+    const audioCtx = new AudioContextClass();
+    const audioBuffer = await audioCtx.decodeAudioData(arrayBuffer);
+
+    // Resample to targetSr mono using OfflineAudioContext
+    const length = Math.max(1, Math.ceil(audioBuffer.duration * targetSr));
+    const offlineCtx = new (window.OfflineAudioContext || window.webkitOfflineAudioContext)(
+      1,
+      length,
+      targetSr
+    );
+
+    const source = offlineCtx.createBufferSource();
+    source.buffer = audioBuffer;
+    source.connect(offlineCtx.destination);
+    source.start(0);
+
+    const renderedBuffer = await offlineCtx.startRendering();
+    const channelData = renderedBuffer.getChannelData(0);
+
+    // Create 16-bit PCM RIFF WAV buffer
+    const wavBuffer = new ArrayBuffer(44 + channelData.length * 2);
+    const view = new DataView(wavBuffer);
+
+    const writeString = (offset, string) => {
+      for (let i = 0; i < string.length; i++) {
+        view.setUint8(offset + i, string.charCodeAt(i));
+      }
+    };
+
+    writeString(0, 'RIFF');
+    view.setUint32(4, 36 + channelData.length * 2, true);
+    writeString(8, 'WAVE');
+    writeString(12, 'fmt ');
+    view.setUint32(16, 16, true); // Subchunk1Size
+    view.setUint16(20, 1, true); // PCM format
+    view.setUint16(22, 1, true); // Mono (1 channel)
+    view.setUint32(24, targetSr, true); // Sample rate (22050)
+    view.setUint32(28, targetSr * 2, true); // Byte rate (targetSr * 1 * 2)
+    view.setUint16(32, 2, true); // Block align (1 * 2)
+    view.setUint16(34, 16, true); // 16 bits per sample
+    writeString(36, 'data');
+    view.setUint32(40, channelData.length * 2, true);
+
+    // Write PCM 16-bit samples
+    let offset = 44;
+    for (let i = 0; i < channelData.length; i++, offset += 2) {
+      let s = Math.max(-1, Math.min(1, channelData[i]));
+      view.setInt16(offset, s < 0 ? s * 0x8000 : s * 0x7FFF, true);
+    }
+
+    try {
+      await audioCtx.close();
+    } catch (_) {}
+
+    return new Blob([view], { type: 'audio/wav' });
+  } catch (err) {
+    console.warn('In-browser WAV conversion failed, falling back to raw recording:', err);
+    return blob;
+  }
+}
+
 export default function App() {
   // Navigation & layout
   const [currentTab, setCurrentTab] = useState('home'); // 'home' | 'history' | 'about'
@@ -154,10 +222,11 @@ export default function App() {
         }
       };
 
-      mediaRecorder.onstop = () => {
-        const blob = new Blob(audioChunksRef.current, { type: 'audio/wav' });
-        setRecordedBlob(blob);
-        const url = URL.createObjectURL(blob);
+      mediaRecorder.onstop = async () => {
+        const rawBlob = new Blob(audioChunksRef.current, { type: mediaRecorder.mimeType || 'audio/webm' });
+        const wavBlob = await convertBlobToWav(rawBlob, 22050);
+        setRecordedBlob(wavBlob);
+        const url = URL.createObjectURL(wavBlob);
         setAudioUrl(url);
         stream.getTracks().forEach((track) => track.stop());
       };
@@ -234,7 +303,11 @@ export default function App() {
 
     setLoading(true);
     const formData = new FormData();
-    formData.append('audio', audioToUpload, inputMode === 'record' ? 'recording.wav' : audioToUpload.name);
+    const isWav = audioToUpload.type === 'audio/wav' || audioToUpload.name?.toLowerCase().endsWith('.wav');
+    const uploadName = inputMode === 'record'
+      ? (isWav ? 'recording.wav' : 'recording.webm')
+      : audioToUpload.name;
+    formData.append('audio', audioToUpload, uploadName);
 
     try {
       const response = await fetch(`${apiUrl}/predict`, {

@@ -35,15 +35,27 @@ def get_model():
         print("Model loaded successfully.")
     return _model
 
-import subprocess
+EMOTION_CLASSES = ['Angry', 'Calm', 'Disgust', 'Fearful', 'Happy', 'Neutral', 'Sad', 'Surprised']
+
+EMOTION_EMOJIS = {
+    'Angry': '😠',
+    'Calm': '😌',
+    'Disgust': '🤢',
+    'Fearful': '😨',
+    'Happy': '😊',
+    'Neutral': '😐',
+    'Sad': '😢',
+    'Surprised': '😲'
+}
 
 def load_audio_safely(file_path, target_sr=22050):
     """
-    Converts browser audio (WebM, Opus, Ogg, MP3, etc.) to 16-bit PCM WAV at 22050Hz
-    using ffmpeg, trims background silence, and normalizes amplitude to match RAVDESS studio audio.
+    Converts audio to 16-bit PCM WAV at target_sr using ffmpeg if necessary,
+    normalizes volume to studio levels, and trims background silence.
     """
     converted_path = file_path + "_converted.wav"
     try:
+        # 1. Convert any input format (WebM, Opus, MP3, etc.) to standard PCM WAV using ffmpeg
         subprocess.run([
             'ffmpeg', '-y', '-i', file_path,
             '-ar', str(target_sr),
@@ -53,6 +65,7 @@ def load_audio_safely(file_path, target_sr=22050):
         ], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, check=True)
         data, sr = librosa.load(converted_path, sr=target_sr)
     except Exception:
+        # Fallback if ffmpeg is not available or input is already standard WAV
         data, sr = librosa.load(file_path, sr=target_sr)
     finally:
         if os.path.exists(converted_path):
@@ -61,15 +74,21 @@ def load_audio_safely(file_path, target_sr=22050):
             except Exception:
                 pass
 
-    # 1. Trim leading and trailing background silence
+    # 2. Initial peak normalization so silence trimming threshold is accurately calibrated
+    max_amp = np.max(np.abs(data))
+    if max_amp > 1e-4:
+        data = data / max_amp
+
+    # 3. Trim leading and trailing background silence (removes dead air)
     try:
-        trimmed_data, _ = librosa.effects.trim(data, top_db=25)
-        if len(trimmed_data) > target_sr * 0.4:
+        trimmed_data, _ = librosa.effects.trim(data, top_db=20)
+        # Keep if speech segment is at least 0.5s long
+        if len(trimmed_data) > target_sr * 0.5:
             data = trimmed_data
     except Exception:
         pass
 
-    # 2. Peak amplitude normalization (studio level calibration)
+    # 4. Final peak amplitude normalization to match RAVDESS studio actor levels
     max_amp = np.max(np.abs(data))
     if max_amp > 1e-4:
         data = data / max_amp
@@ -128,39 +147,18 @@ def predict_emotion():
         
         model = get_model()
         prediction = model.predict(feature)
-        predicted_class = np.argmax(prediction, axis=1)
+        predicted_idx = int(np.argmax(prediction, axis=1)[0])
         
-        label_encoder = LabelEncoder()
-        emotions = {
-            '01':'Neutral',
-            '02':'Calm',
-            '03':'Happy',
-            '04':'Sad',
-            '05':'Angry',
-            '06':'Fearful',
-            '07':'Disgust',
-            '08':'Surprised'
-        }
-        emojis = {
-            'Neutral': '😐',
-            'Calm': '😌',
-            'Happy': '😊',
-            'Sad': '😢',
-            'Angry': '😠',
-            'Fearful': '😨',
-            'Disgust': '🤢',
-            'Surprised': '😲'
-        }
-        label_encoder.fit(list(emotions.values()))
-        predicted_emotion = label_encoder.inverse_transform(predicted_class)[0]
-        predicted_emotion_with_emoji = f"{predicted_emotion} {emojis.get(predicted_emotion, '🎙️')}"
+        predicted_emotion = EMOTION_CLASSES[predicted_idx]
+        emoji = EMOTION_EMOJIS.get(predicted_emotion, '🎙️')
+        predicted_emotion_with_emoji = f"{predicted_emotion} {emoji}"
         
         raw_probs = prediction[0]
         probabilities = {
-            cls: round(float(raw_probs[i]) * 100, 1)
-            for i, cls in enumerate(label_encoder.classes_)
+            EMOTION_CLASSES[i]: round(float(raw_probs[i]) * 100, 1)
+            for i in range(len(EMOTION_CLASSES))
         }
-        confidence = round(float(np.max(raw_probs)) * 100, 1)
+        confidence = round(float(raw_probs[predicted_idx]) * 100, 1)
         
         return jsonify({
             'predicted_emotion': predicted_emotion_with_emoji,
