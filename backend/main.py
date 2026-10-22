@@ -35,6 +35,47 @@ def get_model():
         print("Model loaded successfully.")
     return _model
 
+import subprocess
+
+def load_audio_safely(file_path, target_sr=22050):
+    """
+    Converts browser audio (WebM, Opus, Ogg, MP3, etc.) to 16-bit PCM WAV at 22050Hz
+    using ffmpeg, trims background silence, and normalizes amplitude to match RAVDESS studio audio.
+    """
+    converted_path = file_path + "_converted.wav"
+    try:
+        subprocess.run([
+            'ffmpeg', '-y', '-i', file_path,
+            '-ar', str(target_sr),
+            '-ac', '1',
+            '-c:a', 'pcm_s16le',
+            converted_path
+        ], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, check=True)
+        data, sr = librosa.load(converted_path, sr=target_sr)
+    except Exception:
+        data, sr = librosa.load(file_path, sr=target_sr)
+    finally:
+        if os.path.exists(converted_path):
+            try:
+                os.remove(converted_path)
+            except Exception:
+                pass
+
+    # 1. Trim leading and trailing background silence
+    try:
+        trimmed_data, _ = librosa.effects.trim(data, top_db=25)
+        if len(trimmed_data) > target_sr * 0.4:
+            data = trimmed_data
+    except Exception:
+        pass
+
+    # 2. Peak amplitude normalization (studio level calibration)
+    max_amp = np.max(np.abs(data))
+    if max_amp > 1e-4:
+        data = data / max_amp
+
+    return data, sr
+
 def extract_feature(data, sr, mfcc=True, chroma=True, mel=True):
     """
     Extract features from audio files into numpy array
@@ -80,7 +121,7 @@ def predict_emotion():
     file.save(file_path)
     
     try:
-        data, sr = librosa.load(file_path, sr=22050)
+        data, sr = load_audio_safely(file_path, target_sr=22050)
         feature = extract_feature(data, sr, mfcc=True, chroma=True, mel=True)
         feature = np.expand_dims(feature, axis=0)
         feature = np.expand_dims(feature, axis=2)
