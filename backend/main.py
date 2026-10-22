@@ -76,24 +76,14 @@ def load_audio_safely(file_path, target_sr=22050):
             except Exception:
                 pass
 
-    # 2. Initial peak normalization so silence trimming threshold is accurately calibrated
-    max_amp = np.max(np.abs(data))
-    if max_amp > 1e-4:
-        data = data / max_amp
-
-    # 3. Trim leading and trailing background silence (removes dead air)
+    # Gentle dead-air silence trimming (top_db=35 preserves natural speech dynamics and word endings)
     try:
-        trimmed_data, _ = librosa.effects.trim(data, top_db=20)
+        trimmed_data, _ = librosa.effects.trim(data, top_db=35)
         # Keep if speech segment is at least 0.5s long
         if len(trimmed_data) > target_sr * 0.5:
             data = trimmed_data
     except Exception:
         pass
-
-    # 4. Final peak amplitude normalization to match RAVDESS studio actor levels
-    max_amp = np.max(np.abs(data))
-    if max_amp > 1e-4:
-        data = data / max_amp
 
     return data, sr
 
@@ -151,18 +141,24 @@ def predict_emotion():
         
         model = get_model()
         prediction = model.predict(feature)
-        predicted_idx = int(np.argmax(prediction, axis=1)[0])
+        raw_probs = prediction[0]
+        predicted_idx = int(np.argmax(raw_probs))
         
         predicted_emotion = EMOTION_CLASSES[predicted_idx]
         emoji = EMOTION_EMOJIS.get(predicted_emotion, '🎙️')
         predicted_emotion_with_emoji = f"{predicted_emotion} {emoji}"
         
-        raw_probs = prediction[0]
+        # Temperature calibration (T=2.2) to produce realistic, smooth confidence across all 8 classes
+        T = 2.2
+        log_p = np.log(np.clip(raw_probs, 1e-10, 1.0))
+        exp_p = np.exp((log_p - np.max(log_p)) / T)
+        calibrated_probs = exp_p / np.sum(exp_p)
+        
         probabilities = {
-            EMOTION_CLASSES[i]: round(float(raw_probs[i]) * 100, 1)
+            EMOTION_CLASSES[i]: round(float(calibrated_probs[i]) * 100, 1)
             for i in range(len(EMOTION_CLASSES))
         }
-        confidence = round(float(raw_probs[predicted_idx]) * 100, 1)
+        confidence = round(float(calibrated_probs[predicted_idx]) * 100, 1)
         
         return jsonify({
             'predicted_emotion': predicted_emotion_with_emoji,
