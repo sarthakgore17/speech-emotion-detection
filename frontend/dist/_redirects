@@ -1,0 +1,4 @@
+/api/*   http://16.171.150.161/:splat  200!
+/predict http://16.171.150.161/predict 200!
+/hello   http://16.171.150.161/hello   200!
+/*       /index.html                   200

@@ -1,4 +1,4 @@
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, send_from_directory
 from flask_cors import CORS
 import librosa
 import numpy as np
@@ -7,6 +7,7 @@ from tensorflow.keras.models import load_model
 from sklearn.preprocessing import LabelEncoder
 import traceback
 import os
+import subprocess
 
 try:
     import sounddevice as sd
@@ -16,6 +17,7 @@ except Exception:
     write = None
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+FRONTEND_DIST = os.path.join(os.path.dirname(BASE_DIR), 'frontend', 'dist')
 UPLOAD_FOLDER = os.path.join(BASE_DIR, 'uploads')
 MODEL_PATH = os.path.join(BASE_DIR, 'trained_model.h5')
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
@@ -127,10 +129,12 @@ def record_audio(duration=5, fs=22050):
     return recording.flatten(), fs
 
 @app.route('/hello', methods=['GET'])
+@app.route('/api/hello', methods=['GET'])
 def hello():
     return jsonify({'message': 'Hello, World!'})
 
 @app.route('/predict', methods=['POST'])
+@app.route('/api/predict', methods=['POST'])
 def predict_emotion():
     if 'audio' not in request.files:
         return jsonify({'error': 'No audio file provided'}), 400
@@ -175,6 +179,19 @@ def predict_emotion():
                 os.remove(file_path)
             except Exception:
                 pass
+
+@app.route('/', defaults={'path': ''})
+@app.route('/<path:path>')
+def serve_frontend(path):
+    # Serve requested static file if it exists in frontend/dist
+    file_path = os.path.join(FRONTEND_DIST, path)
+    if path != "" and os.path.exists(file_path) and os.path.isfile(file_path):
+        return send_from_directory(FRONTEND_DIST, path)
+    # Otherwise fallback to index.html (SPA client routing)
+    elif os.path.exists(os.path.join(FRONTEND_DIST, 'index.html')):
+        return send_from_directory(FRONTEND_DIST, 'index.html')
+    else:
+        return jsonify({'message': 'EmoSense API Server Running'}), 200
 
 if __name__ == '__main__':
     # Preload model at startup

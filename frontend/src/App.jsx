@@ -149,7 +149,7 @@ export default function App() {
     if (import.meta.env.VITE_API_URL) return import.meta.env.VITE_API_URL;
     return typeof window !== 'undefined' && window.location.hostname === 'localhost'
       ? 'http://16.171.150.161'
-      : '/api';
+      : '';
   });
 
   // Audio input mode
