@@ -3,8 +3,14 @@
   publish = "dist"
 
 [[redirects]]
+  from = "/predict"
+  to = "http://16.171.150.161:5000/predict"
+  status = 200
+  force = true
+
+[[redirects]]
   from = "/api/*"
-  to = "http://16.171.150.161/:splat"
+  to = "http://16.171.150.161:5000/api/:splat"
   status = 200
   force = true
 

@@ -146,7 +146,8 @@ export default function App() {
   const [showSettings, setShowSettings] = useState(false);
   const [apiUrl, setApiUrl] = useState(() => {
     const stored = localStorage.getItem('emosense_api');
-    if (stored && stored !== 'http://16.171.150.161') return stored;
+    // Clear out hardcoded http ip from stored if present on https
+    if (stored && !stored.includes('16.171.150.161')) return stored;
     if (import.meta.env.VITE_API_URL) return import.meta.env.VITE_API_URL;
     return typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
       ? 'http://127.0.0.1:5000'
