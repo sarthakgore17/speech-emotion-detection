@@ -4,3 +4,7 @@
 /backend/.venv/
 .venv/
 .DS_Store
+/backend/models/
+*.safetensors
+__pycache__/
+*.pyc

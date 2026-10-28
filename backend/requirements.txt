@@ -1,9 +1,25 @@
+# ─── Core web framework ───
 flask>=3.0.0
 flask-cors>=4.0.0
 gunicorn>=21.2.0
+
+# ─── Audio processing ───
 librosa>=0.10.0
-tensorflow>=2.15.0
+soundfile>=0.12.0
+scipy>=1.11.0
+
+# ─── Shared ML utilities ───
 numpy>=1.23.0
 scikit-learn>=1.3.0
-scipy>=1.11.0
-soundfile>=0.12.0
+
+# ─── Legacy CNN model (TensorFlow/Keras) ───
+tensorflow>=2.15.0
+
+# ─── V2 Wav2Vec2 model (PyTorch + HuggingFace) ───
+torch>=2.0.0
+transformers>=4.36.0
+accelerate>=0.25.0
+
+# ─── Training extras (only needed for train_v2.py) ───
+matplotlib>=3.7.0
+seaborn>=0.12.0
